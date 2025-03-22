@@ -1,10 +1,8 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
-const { PDFDocument } = require('pdf-lib');
+const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
 const fs = require('fs');
 const path = require('path');
-const { rgb } = require('pdf-lib');
-
 const findCoordinates = async (pdfPath) => {
     try {
         const bytes = fs.readFileSync(pdfPath);
@@ -13,13 +11,11 @@ const findCoordinates = async (pdfPath) => {
         const { width, height } = page.getSize();
         
         console.log('PDF dimensions:', { width, height });
-        // This will help you map coordinates on the template
         return { width, height };
     } catch (error) {
         console.error('Error reading PDF:', error);
     }
 };
-
 const AadharForm = () => {
     const [formData, setFormData] = React.useState({
         name: '',
@@ -72,10 +68,30 @@ const AadharForm = () => {
         setFormData(prev => ({ ...prev, age: age.toString() }));
     };
 
+    const formatAadharNumber = (value) => {
+        // Remove all non-digits
+        const digits = value.replace(/\D/g, '');
+        
+        // Add spaces after every 4 digits
+        const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+        
+        // Limit to 12 digits (plus spaces)
+        return formatted.slice(0, 14);
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
-        if (name === 'birthdate') calculateAge(value);
+        
+        if (name === 'aadharNo' || name === 'hofAadhar') {
+            // Format Aadhar numbers with spaces
+            const formattedValue = formatAadharNumber(value);
+            setFormData(prev => ({ ...prev, [name]: formattedValue }));
+        } else if (name === 'birthdate') {
+            setFormData(prev => ({ ...prev, [name]: value }));
+            calculateAge(value);
+        } else {
+            setFormData(prev => ({ ...prev, [name]: value }));
+        }
     };
 
     const handleCheckboxChange = (field) => {
@@ -85,32 +101,47 @@ const AadharForm = () => {
     const fillPDF = async (formData) => {
         try {
             const templatePath = path.join(__dirname, 'template.pdf');
-            await findCoordinates(templatePath);
+            if (!fs.existsSync(templatePath)) {
+                throw new Error('Template PDF not found');
+            }
+
             const templateBytes = fs.readFileSync(templatePath);
             const pdfDoc = await PDFDocument.load(templateBytes);
-            const page = pdfDoc.getPages()[0];
             
-            // Adjust these coordinates based on your template.pdf
+            const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+            const zapfDingbatsFont = await pdfDoc.embedFont(StandardFonts.ZapfDingbats);
+            
+            const page = pdfDoc.getPages()[0];
+
+
             const coordinates = {
-                // Basic Info
-                name: { x: 150, y: 700, maxChars: 30 },
-                aadharNo: { x: 150, y: 670, maxChars: 12, spacing: 1 },
-                mobileNo: { x: 150, y: 640, maxChars: 10, spacing: 1 },
-                
-                // HOF Details
-                hofName: { x: 150, y: 610, maxChars: 30 },
-                hofAadhar: { x: 150, y: 580, maxChars: 12, spacing: 1 },
-                hofRelation: { x: 150, y: 550, maxChars: 20 },
-                
-                // Gender & Email
-                gender: { x: 150, y: 520, maxChars: 20 },
+                update: { x: 258, y: 720, symbol: '✓', font: zapfDingbatsFont },
+                name: { x: 110, y: 678, maxChars: 30, spacing: 0.5 },
+                aadharNo: { x: 218, y: 300, maxChars: 12, spacing: 2.5 },
+                mobileNo: { x: 468, y: 612, maxChars: 10, spacing: 2.3 },
+                hofName: { x: 195, y: 437, maxChars: 30, spacing: 0.5 },
+                hofAadhar: { x: 422, y: 436, maxChars: 12, spacing: 2.5 },
+                hofRelation: { 
+                    options: { 
+                        mother: { x: 205, y: 423, symbol: '✓', font: zapfDingbatsFont },
+                        father: { x: 265, y: 430, symbol: '✓', font: zapfDingbatsFont },
+                        'legal guardian': { x: 335, y: 430, symbol: '✓', font: zapfDingbatsFont },
+                        spouse: { x: 320, y: 320, symbol: '✓', font: zapfDingbatsFont },
+                        'child/ward': { x: 448, y: 320, symbol: '✓', font: zapfDingbatsFont },
+                        sibling: { x: 548, y: 320, symbol: '✓', font: zapfDingbatsFont },
+                    }
+                 },
+                gender: {  
+                    options: { 
+                        male: { x: 68, y: 640, symbol: '✓', font: zapfDingbatsFont },
+                        female: { x: 120, y: 652, symbol: '✓', font: zapfDingbatsFont },
+                        'third gender/transgender': { x: 68, y: 624, symbol: '✓', font: zapfDingbatsFont }
+                    }
+                },
                 email: { x: 150, y: 490, maxChars: 35 },
-                
-                // Birth Details
                 birthdate: { x: 150, y: 460, maxChars: 10 },
                 age: { x: 300, y: 460, maxChars: 3 },
-                
-                // Address fields (adjust Y coordinates as needed)
+                pdb: { x: 450, y: 460, maxChars: 30 },
                 careOf: { x: 150, y: 430, maxChars: 30 },
                 houseNo: { x: 150, y: 400, maxChars: 20 },
                 street: { x: 150, y: 370, maxChars: 30 },
@@ -118,59 +149,121 @@ const AadharForm = () => {
                 area: { x: 150, y: 310, maxChars: 30 },
                 village: { x: 150, y: 280, maxChars: 30 },
                 postOffice: { x: 150, y: 250, maxChars: 30 },
-                pincode: { x: 150, y: 220, maxChars: 6, spacing: 1 },
+                pincode: { x: 150, y: 220, maxChars: 6, spacing: 10 },
                 subDistrict: { x: 150, y: 190, maxChars: 30 },
                 district: { x: 150, y: 160, maxChars: 30 },
-                state: { x: 150, y: 130, maxChars: 30 }
+                state: { x: 150, y: 130, maxChars: 30 },
+                residentialType: {
+                    x: 150,
+                    y: 600,
+                    options: {
+                        'indian residential': { x: 143, y: 704, symbol: '✓', font: zapfDingbatsFont },
+                        'non residential indian': { x: 258, y: 704, symbol: '✓', font: zapfDingbatsFont }
+                    }
+                }
             };
-
-            // Function to handle character spacing for boxes
+    
             const drawTextInBoxes = (text, config) => {
-                const { x, y, maxChars, spacing = 0 } = config;
-                const chars = text.split('');
-                chars.forEach((char, index) => {
-                    if (index < maxChars) {
-                        page.drawText(char, {
-                            x: x + (index * (12 + spacing)),
-                            y: y,
-                            size: 12,
+                const { x, y, maxChars, spacing = 0.5 } = config;
+                
+                // Handle the update checkbox
+                if (config.symbol) {
+                    page.drawText(config.symbol, {
+                        x: config.x,
+                        y: config.y,
+                        size: 10,
+                        font: config.font || helveticaFont,
+                        color: rgb(0, 0, 0)
+                    });
+                    return;
+                }
+                
+                if (config.options) {
+                    const option = config.options[text.toLowerCase()];
+                    if (option) {
+                        page.drawText(option.symbol, {
+                            x: option.x,
+                            y: option.y,
+                            size: 10,
+                            font: option.font || helveticaFont,
                             color: rgb(0, 0, 0)
                         });
                     }
-                });
-            };
+                } else {
+                    // Process text based on field type
+                    let processedText = text;
+                    if (text.includes(' ')) {
+                        // Remove existing spaces first
+                        processedText = text.replace(/\s/g, '');
+                    }
+                    
+                    // Add spaces for Aadhar numbers
+                    if (config.maxChars === 12 && processedText.length === 12) {
+                        processedText = processedText.replace(/(\d{4})(?=.)/g, '$1 ');
+                    }
 
-            // Fill the PDF with formatted text
+                    const chars = processedText.split('');
+                    chars.forEach((char, index) => {
+                        if (index < maxChars) {
+                            let xOffset = x + (index * (8 + spacing));
+                            
+                            // Adjust offset for Aadhar number spaces
+                            if (config.maxChars === 12 && index > 3) {
+                                xOffset += 4; // Add extra space after every 4 digits
+                            }
+                            if (config.maxChars === 12 && index > 7) {
+                                xOffset += 4; // Add extra space after 8 digits
+                            }
+                            
+                            page.drawText(char, {
+                                x: xOffset,
+                                y: y,
+                                size: 10,
+                                font: helveticaFont,
+                                color: rgb(0, 0, 0)
+                            });
+                        }
+                    });
+                }
+            };
+    
+            // Draw the update checkbox first
+            drawTextInBoxes('✓', coordinates.update);
+
+            // Handle the rest of the form data
             Object.entries(formData).forEach(([key, value]) => {
                 if (value && coordinates[key]) {
                     const config = coordinates[key];
-                    if (config.spacing !== undefined) {
-                        // Draw in boxes for fields like Aadhar, Mobile, Pincode
-                        drawTextInBoxes(value.toString(), config);
+                    if (key === 'aadharNo' || key === 'hofAadhar') {
+                        // Format Aadhar numbers with proper spacing
+                        const cleanValue = value.replace(/\s/g, '');
+                        drawTextInBoxes(cleanValue, config);
                     } else {
-                        // Normal text for other fields
-                        page.drawText(value.toString().substring(0, config.maxChars), {
-                            x: config.x,
-                            y: config.y,
-                            size: 12,
-                            color: rgb(0, 0, 0)
-                        });
+                        drawTextInBoxes(value.toString(), config);
                     }
                 }
             });
-
-            // Save and download
+    
+            // Modified preview section
             const pdfBytes = await pdfDoc.save();
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const url = window.URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = 'filled_form.pdf';
-            link.click();
-            window.URL.revokeObjectURL(url);
+
+            try {
+                window.open(url, '_blank');
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                }, 1000);
+            } catch (error) {
+                console.error('Preview error:', error);
+                alert('Error opening PDF preview: ' + error.message);
+                window.URL.revokeObjectURL(url);
+            }
+
         } catch (error) {
-            console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please try again.');
+            console.error('PDF Generation Error:', error);
+            console.error('Error Stack:', error.stack);
+            alert('Error generating PDF: ' + error.message);
         }
     };
 
@@ -195,9 +288,10 @@ const AadharForm = () => {
                 React.createElement('input', {
                     type: 'text',
                     name: 'aadharNo',
-                    pattern: '[0-9]{12}',
                     value: formData.aadharNo,
                     onChange: handleInputChange,
+                    placeholder: 'XXXX XXXX XXXX',
+                    maxLength: 14,
                     required: true
                 })
             ),
@@ -291,25 +385,27 @@ const AadharForm = () => {
                     React.createElement('input', {
                         type: 'text',
                         name: 'hofAadhar',
-                        pattern: '[0-9]{12}',
                         value: formData.hofAadhar,
                         onChange: handleInputChange,
+                        placeholder: 'XXXX XXXX XXXX',
+                        maxLength: 14,
                         disabled: !selectedFields.hof
                     })
                 ),
                 React.createElement('div', { className: 'form-group' },
+                    React.createElement('label', null, 'HOF Relation'),
                     React.createElement('div', { className: 'radio-group' },
-                        ['mother', 'father', 'child/ward','legal gurdeian','spouse','sibling'].map(gender =>
-                            React.createElement('label', { key: gender, className: 'radio-label' },
+                        ['Mother', 'Father', 'Legal Guardian', 'Spouse', 'Child/Ward', 'Sibling'].map(relation =>
+                            React.createElement('label', { key: relation, className: 'radio-label' },
                                 React.createElement('input', {
                                     type: 'radio',
                                     name: 'hofRelation',
-                                    value: gender.toLowerCase(),
-                                    checked: formData.hofRelation === gender.toLowerCase(),
+                                    value: relation.toLowerCase(),
+                                    checked: formData.hofRelation === relation.toLowerCase(),
                                     onChange: handleInputChange,
-                                    disabled: !selectedFields.hofRelation
+                                    disabled: !selectedFields.hof
                                 }),
-                                gender
+                                relation
                             )
                         )
                     )
@@ -368,8 +464,19 @@ const AadharForm = () => {
                     React.createElement('label', null, 'Age'),
                     React.createElement('input', {
                         type: 'text',
+                        name: 'age',
                         value: formData.age,
                         readOnly: true
+                    })
+                ),
+                React.createElement('div', { className: 'form-group' },
+                    React.createElement('label', null, 'Place of Birth'),
+                    React.createElement('input', {
+                        type: 'text',
+                        name: 'pdb',
+                        value: formData.pdb,
+                        onChange: handleInputChange,
+                        disabled: !selectedFields.birthdate
                     })
                 )
             )
@@ -518,9 +625,14 @@ const AadharForm = () => {
             className: 'submit-btn',
             onClick: async (e) => {
                 e.preventDefault();
-                await fillPDF(formData);
+                try {
+                    await fillPDF(formData);
+                } catch (error) {
+                    console.error('Submit error:', error);
+                    alert('Error submitting form: ' + error.message);
+                }
             }
-        }, 'Generate & Download PDF')
+        }, 'Generate & Print PDF')
     );
 };
 
