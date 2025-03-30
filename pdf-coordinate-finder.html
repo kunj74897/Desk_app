@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF Coordinate Finder</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    #pdfContainer {
+      border: 1px solid #ccc;
+      margin-top: 20px;
+    }
+    #coordinates {
+      font-family: monospace;
+      margin-top: 10px;
+      font-size: 16px;
+      background-color: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    #coordList {
+      margin-top: 20px;
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    #fileInput {
+      margin: 10px 0;
+    }
+    button {
+      padding: 8px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>PDF Coordinate Finder</h1>
+  
+  <div>
+    <p>Upload your template.pdf file:</p>
+    <input type="file" id="fileInput" accept=".pdf">
+  </div>
+  
+  <div id="coordinates">Click on the PDF to get coordinates</div>
+  <div id="pdfContainer">
+    <canvas id="pdfCanvas"></canvas>
+  </div>
+  <div id="coordList"><strong>Coordinate History:</strong><br></div>
+  
+  <script>
+    // Setup PDF.js
+    const pdfjsLib = window['pdfjsLib'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    
+    let pdfDoc = null;
+    const canvas = document.getElementById('pdfCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Load the PDF when a file is selected
+    document.getElementById('fileInput').addEventListener('change', function(event) {
+      const file = event.target.files[0];
+      if (file && file.type === 'application/pdf') {
+        const fileReader = new FileReader();
+        
+        fileReader.onload = function() {
+          const typedarray = new Uint8Array(this.result);
+          renderPDF(typedarray);
+        };
+        
+        fileReader.readAsArrayBuffer(file);
+      }
+    });
+    
+    // Render the PDF
+    async function renderPDF(pdfData) {
+      try {
+        // Load the PDF document
+        pdfDoc = await pdfjsLib.getDocument({data: pdfData}).promise;
+        const page = await pdfDoc.getPage(1);
+        
+        const scale = 1.5;
+        const viewport = page.getViewport({scale});
+        
+        // Set canvas dimensions
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+        
+        // Render the PDF page
+        const renderContext = {
+          canvasContext: ctx,
+          viewport: viewport
+        };
+        
+        await page.render(renderContext).promise;
+        
+        // Set up the click handler
+        canvas.addEventListener('click', function(event) {
+          const rect = canvas.getBoundingClientRect();
+          const x = Math.round((event.clientX - rect.left) / scale);
+          // Invert Y coordinate because PDF coordinates start from bottom
+          const y = Math.round(viewport.height / scale - (event.clientY - rect.top) / scale);
+          
+          const coordText = `{x: ${x}, y: ${y}}`;
+          document.getElementById('coordinates').textContent = coordText;
+          
+          // Add to the list of coordinates
+          const coordList = document.getElementById('coordList');
+          coordList.innerHTML += coordText + '<br>';
+          
+          // Draw a marker
+          ctx.beginPath();
+          ctx.arc(event.clientX - rect.left, event.clientY - rect.top, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = 'red';
+          ctx.fill();
+        });
+        
+      } catch (error) {
+        console.error('Error rendering PDF:', error);
+        document.getElementById('coordinates').textContent = 'Error rendering PDF: ' + error.message;
+      }
+    }
+  </script>
+</body>
+</html>

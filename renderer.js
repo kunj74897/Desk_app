@@ -55,6 +55,49 @@ const AadharForm = () => {
         address: false
     });
 
+    const [alertMessage, setAlertMessage] = React.useState('');
+    const [showAlert, setShowAlert] = React.useState(false);
+
+    // Create a custom alert component that doesn't block UI
+    const CustomAlert = ({ message, onClose }) => {
+        return React.createElement('div', {
+            className: 'custom-alert',
+            style: {
+                position: 'fixed',
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: '#f8d7da',
+                border: '1px solid #f5c6cb',
+                color: '#721c24',
+                padding: '15px 20px',
+                borderRadius: '5px',
+                zIndex: 1000,
+                boxShadow: '0 0 10px rgba(0,0,0,0.2)'
+            }
+        }, 
+            React.createElement('div', null, message),
+            React.createElement('button', {
+                onClick: onClose,
+                style: {
+                    marginTop: '10px',
+                    padding: '5px 10px',
+                    background: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '3px',
+                    cursor: 'pointer'
+                }
+            }, 'Close')
+        );
+    };
+
+    // Replace all alert() calls with this function
+    const showCustomAlert = (message) => {
+        setAlertMessage(message);
+        setShowAlert(true);
+    };
+
     const calculateAge = (birthDate) => {
         const today = new Date();
         const birth = new Date(birthDate);
@@ -72,11 +115,16 @@ const AadharForm = () => {
         // Remove all non-digits
         const digits = value.replace(/\D/g, '');
         
-        // Add spaces after every 4 digits
-        const formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+        // Format with spaces after every 4 digits (XXXX XXXX XXXX)
+        let formatted = '';
+        for (let i = 0; i < digits.length && i < 12; i++) {
+            if (i > 0 && i % 4 === 0) {
+                formatted += ' ';
+            }
+            formatted += digits[i];
+        }
         
-        // Limit to 12 digits (plus spaces)
-        return formatted.slice(0, 14);
+        return formatted;
     };
 
     const handleInputChange = (e) => {
@@ -116,43 +164,43 @@ const AadharForm = () => {
 
             const coordinates = {
                 update: { x: 258, y: 720, symbol: '✓', font: zapfDingbatsFont },
-                name: { x: 110, y: 678, maxChars: 30, spacing: 0.5 },
-                aadharNo: { x: 218, y: 300, maxChars: 12, spacing: 2.5 },
+                name: { x: 110, y: 678, maxChars: 30, spacing: 0.2 },
+                aadharNo: { x: 218, y: 300, maxChars: 12, spacing: 0 },
                 mobileNo: { x: 468, y: 612, maxChars: 10, spacing: 2.3 },
-                hofName: { x: 195, y: 437, maxChars: 30, spacing: 0.5 },
-                hofAadhar: { x: 422, y: 436, maxChars: 12, spacing: 2.5 },
+                hofName: { x: 195, y: 437, maxChars: 30, spacing: 0.2 },
+                hofAadhar: { x: 422, y: 436, maxChars: 12, spacing: 0 },
                 hofRelation: { 
                     options: { 
                         mother: { x: 205, y: 423, symbol: '✓', font: zapfDingbatsFont },
-                        father: { x: 265, y: 430, symbol: '✓', font: zapfDingbatsFont },
-                        'legal guardian': { x: 335, y: 430, symbol: '✓', font: zapfDingbatsFont },
-                        spouse: { x: 320, y: 320, symbol: '✓', font: zapfDingbatsFont },
-                        'child/ward': { x: 448, y: 320, symbol: '✓', font: zapfDingbatsFont },
-                        sibling: { x: 548, y: 320, symbol: '✓', font: zapfDingbatsFont },
+                        father: { x: 259, y: 423, symbol: '✓', font: zapfDingbatsFont },
+                        'legal guardian': { x: 318, y: 423, symbol: '✓', font: zapfDingbatsFont },
+                        spouse: { x: 263, y: 414, symbol: '✓', font: zapfDingbatsFont },
+                        'child/ward': { x: 318, y: 414, symbol: '✓', font: zapfDingbatsFont },
+                        sibling: { x: 389, y: 414, symbol: '✓', font: zapfDingbatsFont },
                     }
                  },
                 gender: {  
                     options: { 
                         male: { x: 68, y: 640, symbol: '✓', font: zapfDingbatsFont },
                         female: { x: 120, y: 652, symbol: '✓', font: zapfDingbatsFont },
-                        'third gender/transgender': { x: 68, y: 624, symbol: '✓', font: zapfDingbatsFont }
+                        'third gender/transgender': { x: 68, y: 630, symbol: '✓', font: zapfDingbatsFont }
                     }
                 },
-                email: { x: 150, y: 490, maxChars: 35 },
-                birthdate: { x: 150, y: 460, maxChars: 10 },
-                age: { x: 300, y: 460, maxChars: 3 },
-                pdb: { x: 450, y: 460, maxChars: 30 },
-                careOf: { x: 150, y: 430, maxChars: 30 },
-                houseNo: { x: 150, y: 400, maxChars: 20 },
-                street: { x: 150, y: 370, maxChars: 30 },
-                landmark: { x: 150, y: 340, maxChars: 30 },
-                area: { x: 150, y: 310, maxChars: 30 },
-                village: { x: 150, y: 280, maxChars: 30 },
-                postOffice: { x: 150, y: 250, maxChars: 30 },
-                pincode: { x: 150, y: 220, maxChars: 6, spacing: 10 },
-                subDistrict: { x: 150, y: 190, maxChars: 30 },
-                district: { x: 150, y: 160, maxChars: 30 },
-                state: { x: 150, y: 130, maxChars: 30 },
+                email: { x: 114, y: 615, maxChars: 35 },
+                birthdate: {x: 279, y: 655, maxChars: 10 },
+                age: { x: 473, y: 655, maxChars: 3 },
+                pdb: { x: 415, y: 465, maxChars: 30 },
+                careOf: {x: 201, y: 560, maxChars: 30 },
+                houseNo: { x: 195, y: 550, maxChars: 20 },
+                street: { x: 321, y: 550, maxChars: 30 },
+                landmark: { x: 115, y: 535, maxChars: 30 },
+                area: { x: 383, y: 535, maxChars: 30 },
+                village: { x: 147, y: 520, maxChars: 30 },
+                postOffice: { x: 338, y: 520, maxChars: 30 },
+                pincode: { x: 507, y: 520, maxChars: 6, spacing: 10 },
+                subDistrict: { x: 119, y: 505, maxChars: 30 },
+                district: { x: 281, y: 505, maxChars: 30 },
+                state: { x: 440, y: 505, maxChars: 30 },
                 residentialType: {
                     x: 150,
                     y: 600,
@@ -163,7 +211,7 @@ const AadharForm = () => {
                 }
             };
     
-            const drawTextInBoxes = (text, config) => {
+            const drawTextInBoxes = (text, config, key = '') => {
                 const { x, y, maxChars, spacing = 0.5 } = config;
                 
                 // Handle the update checkbox
@@ -190,40 +238,41 @@ const AadharForm = () => {
                         });
                     }
                 } else {
-                    // Process text based on field type
-                    let processedText = text;
-                    if (text.includes(' ')) {
-                        // Remove existing spaces first
-                        processedText = text.replace(/\s/g, '');
-                    }
+                    // Check if this is a numeric field that needs character-by-character placement
+                    const isNumericField = key === 'aadharNo' || key === 'hofAadhar' || key === 'mobileNo' || key === 'pincode';
                     
-                    // Add spaces for Aadhar numbers
-                    if (config.maxChars === 12 && processedText.length === 12) {
-                        processedText = processedText.replace(/(\d{4})(?=.)/g, '$1 ');
-                    }
-
-                    const chars = processedText.split('');
-                    chars.forEach((char, index) => {
-                        if (index < maxChars) {
-                            let xOffset = x + (index * (8 + spacing));
+                    if (isNumericField) {
+                        // Character-by-character placement for numbers
+                        const digits = text.replace(/\s/g, '');
+                        const charSpacing = key === 'mobileNo' ? 10.2 : 10.2; // Wider spacing for mobile number
+                        
+                        for (let i = 0; i < digits.length && i < maxChars; i++) {
+                            let xPos = x + (i * charSpacing);
                             
-                            // Adjust offset for Aadhar number spaces
-                            if (config.maxChars === 12 && index > 3) {
-                                xOffset += 4; // Add extra space after every 4 digits
-                            }
-                            if (config.maxChars === 12 && index > 7) {
-                                xOffset += 4; // Add extra space after 8 digits
-                            }
+                            // Add extra gap after every 4 digits for Aadhar numbers
+                            if ((key === 'aadharNo' || key === 'hofAadhar') && i >= 4) xPos += 12;
+                            if ((key === 'aadharNo' || key === 'hofAadhar') && i >= 8) xPos += 12;
                             
-                            page.drawText(char, {
-                                x: xOffset,
+                            page.drawText(digits[i], {
+                                x: xPos,
                                 y: y,
                                 size: 10,
                                 font: helveticaFont,
                                 color: rgb(0, 0, 0)
                             });
                         }
-                    });
+                    } else {
+                        // For regular text fields - draw the text directly as is
+                        const displayText = text.length > maxChars ? text.substring(0, maxChars) : text;
+                        
+                        page.drawText(displayText, {
+                            x: x,
+                            y: y,
+                            size: 10,
+                            font: helveticaFont,
+                            color: rgb(0, 0, 0)
+                        });
+                    }
                 }
             };
     
@@ -234,12 +283,15 @@ const AadharForm = () => {
             Object.entries(formData).forEach(([key, value]) => {
                 if (value && coordinates[key]) {
                     const config = coordinates[key];
-                    if (key === 'aadharNo' || key === 'hofAadhar') {
-                        // Format Aadhar numbers with proper spacing
+                    
+                    // Always pass the clean value and key to drawTextInBoxes
+                    if ((key === 'aadharNo' || key === 'hofAadhar') && value) {
                         const cleanValue = value.replace(/\s/g, '');
-                        drawTextInBoxes(cleanValue, config);
-                    } else {
-                        drawTextInBoxes(value.toString(), config);
+                        if (cleanValue.length === 12) {
+                            drawTextInBoxes(cleanValue, config, key);
+                        }
+                    } else if (value) {
+                        drawTextInBoxes(value.toString(), config, key);
                     }
                 }
             });
@@ -256,15 +308,68 @@ const AadharForm = () => {
                 }, 1000);
             } catch (error) {
                 console.error('Preview error:', error);
-                alert('Error opening PDF preview: ' + error.message);
+                showCustomAlert('Error opening PDF preview: ' + error.message);
                 window.URL.revokeObjectURL(url);
             }
 
         } catch (error) {
             console.error('PDF Generation Error:', error);
             console.error('Error Stack:', error.stack);
-            alert('Error generating PDF: ' + error.message);
+            showCustomAlert('Error generating PDF: ' + error.message);
         }
+    };
+
+    // Add this function to validate required fields before PDF generation
+    const validateForm = () => {
+        // Check required fields
+        const requiredFields = ['name', 'aadharNo', 'mobileNo', 'verificationName'];
+        
+        // Check residentialType is selected
+        if (!formData.residentialType) {
+            showCustomAlert("Please select a Residential Type");
+            return false;
+        }
+
+        // Add conditional required fields properly
+        if (selectedFields.email && !formData.email) {
+            showCustomAlert("Please fill in your Email Address");
+            return false;
+        }
+
+        if (selectedFields.address) {
+            const addressFields = {
+                houseNo: "House No./Building/Apartment",
+                street: "Street/Road/Lane", 
+                area: "Area/Locality/Sector",
+                pincode: "Pincode"
+            };
+            
+            for (const [field, label] of Object.entries(addressFields)) {
+                if (!formData[field]) {
+                    showCustomAlert(`Please fill in ${label}`);
+                    return false;
+                }
+            }
+        }
+        
+        // Check basic required fields
+        for (const field of requiredFields) {
+            if (!formData[field]) {
+                showCustomAlert(`Please fill in required field: ${field}`);
+                return false;
+            }
+        }
+        
+        // Validate Aadhar number properly
+        if (formData.aadharNo) {
+            const cleanValue = formData.aadharNo.replace(/\s/g, '');
+            if (cleanValue.length !== 12) {
+                showCustomAlert("Aadhar number must be 12 digits");
+                return false;
+            }
+        }
+        
+        return true;
     };
 
     return React.createElement('form', { className: 'form-container' },
@@ -621,18 +726,34 @@ const AadharForm = () => {
         ),
 
         React.createElement('button', {
-            type: 'submit',
+            type: 'button',
             className: 'submit-btn',
-            onClick: async (e) => {
-                e.preventDefault();
-                try {
-                    await fillPDF(formData);
-                } catch (error) {
-                    console.error('Submit error:', error);
-                    alert('Error submitting form: ' + error.message);
+            onClick: (e) => {
+                // Don't use preventDefault() here as it might interfere with future interactions
+                
+                // Perform validation
+                const isValid = validateForm();
+                
+                // Only proceed with PDF generation if validation passes
+                if (isValid) {
+                    // Use setTimeout to ensure any UI updates complete before heavy PDF processing
+                    setTimeout(async () => {
+                        try {
+                            await fillPDF(formData);
+                        } catch (error) {
+                            console.error('PDF Generation Error:', error);
+                            showCustomAlert('Error generating PDF: ' + error.message);
+                        }
+                    }, 100);
                 }
+                // If validation fails, the function will exit here, keeping the form interactive
             }
-        }, 'Generate & Print PDF')
+        }, 'Generate & Print PDF'),
+
+        showAlert && React.createElement(CustomAlert, {
+            message: alertMessage,
+            onClose: () => setShowAlert(false)
+        })
     );
 };
 
