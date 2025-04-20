@@ -1,23 +1,26 @@
 {
-  "name": "my-electron-app",
+  "name": "aadhar-app",
   "version": "1.0.0",
-  "description": "Hello World!",
+  "description": "Aadhar Form Generator with License Protection",
   "main": "main.js",
   "scripts": {
-    "build": "electron-builder",
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build": "electron-builder",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "postinstall": "electron-builder install-app-deps"
   },
   "author": "Jane Doe",
   "license": "MIT",
   "devDependencies": {
-    "electron": "^35.0.0",
-    "electron-builder": "^25.1.8",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
     "electron-devtools-installer": "^4.0.0"
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.0",
     "crypto-js": "^4.2.0",
+    "electron-store": "^8.1.0",
     "node-machine-id": "^1.1.12",
     "pdf-lib": "^1.17.1",
     "react": "^17.0.2",
@@ -26,7 +29,7 @@
   },
   "build": {
     "appId": "com.aadhar.app",
-    "productName": "Aadhar App",
+    "productName": "Aadhar Form Generator",
     "directories": {
       "output": "dist"
     },
@@ -34,20 +37,12 @@
       "target": "nsis",
       "icon": "build/icon.ico"
     },
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage"
-    },
     "nsis": {
       "oneClick": false,
-      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "runAfterFinish": true,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico"
+      "createStartMenuShortcut": true,
+      "shortcutName": "Aadhar Form Generator"
     },
     "files": [
       "**/*",

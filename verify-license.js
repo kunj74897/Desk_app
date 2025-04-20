@@ -1,6 +1,23 @@
 const LicenseManager = require('./license-manager');
-const manager = new LicenseManager();
 
-console.log('License Path:', manager.licensePath);
-console.log('License exists:', require('fs').existsSync(manager.licensePath));
-console.log('License valid:', manager.verifyLicense()); 
+function verifyLicense() {
+    const licenseManager = new LicenseManager();
+    const license = licenseManager.loadLicense();
+    
+    if (!license) {
+        console.error('No license found. Please install a valid license.');
+        process.exit(1);
+    }
+    
+    const isValid = licenseManager.verifyLicense(license);
+    
+    if (!isValid) {
+        console.error('Invalid or expired license. Please contact support.');
+        process.exit(1);
+    }
+    
+    console.log('License verified successfully!');
+    return true;
+}
+
+module.exports = verifyLicense; 

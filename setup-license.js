@@ -1,25 +1,36 @@
 const LicenseManager = require('./license-manager');
-const fs = require('fs');
-const manager = new LicenseManager();
+const readline = require('readline');
 
-try {
-    console.log('Creating license for Machine ID:', manager.machineId);
-    console.log('License will be saved to:', manager.licensePath);
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+async function setupLicense() {
+    const licenseManager = new LicenseManager();
     
-    const license = manager.generateLicense();
-    manager.saveLicense(license);
+    console.log('Aadhar App License Setup');
+    console.log('=======================');
     
-    // Verify the file was created
-    const exists = fs.existsSync(manager.licensePath);
-    console.log('License file created:', exists);
+    // Get hardware ID
+    const hardwareId = licenseManager.getHardwareId();
+    console.log(`Hardware ID: ${hardwareId}`);
     
-    if (exists) {
-        const content = fs.readFileSync(manager.licensePath, 'utf8');
-        console.log('License content exists:', content.length > 0);
-    }
+    // Get expiration date
+    const expirationDate = await new Promise((resolve) => {
+        rl.question('Enter license expiration date (YYYY-MM-DD): ', (answer) => {
+            resolve(answer);
+        });
+    });
     
-    console.log('Verifying license:', manager.verifyLicense());
-} catch (error) {
-    console.error('Error:', error.message);
-    console.error(error.stack);
-} 
+    // Generate license
+    const license = licenseManager.generateLicense(hardwareId, expirationDate);
+    licenseManager.saveLicense(license);
+    
+    console.log('\nLicense generated and installed successfully!');
+    console.log(`Expiration Date: ${expirationDate}`);
+    
+    rl.close();
+}
+
+setupLicense().catch(console.error); 
