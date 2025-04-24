@@ -445,21 +445,6 @@
     </div>
 
     <script>
-        // For debugging - log all IPC calls
-        const originalInvoke = require('electron').ipcRenderer.invoke;
-        require('electron').ipcRenderer.invoke = function(channel, ...args) {
-            console.log(`IPC invoke: ${channel}`, args);
-            return originalInvoke.call(this, channel, ...args)
-                .then(result => {
-                    console.log(`IPC result: ${channel}`, result);
-                    return result;
-                })
-                .catch(error => {
-                    console.error(`IPC error: ${channel}`, error);
-                    throw error;
-                });
-        };
-
         const { ipcRenderer } = require('electron');
         const React = require('react');
         const ReactDOM = require('react-dom');
@@ -468,22 +453,16 @@
         // Check URL parameters to determine which page to show
         const urlParams = new URLSearchParams(window.location.search);
         const page = urlParams.get('page');
-        console.log('Current page:', page);
 
         if (page === 'form') {
-            console.log('Showing form page');
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('formPage').style.display = 'block';
             ReactDOM.render(React.createElement(AadharForm), document.getElementById('root'));
         } else {
-            console.log('Showing login page');
-            
             // Login form handling
             const loginForm = document.getElementById('loginForm');
-            console.log('Login form:', loginForm);
             
             loginForm.addEventListener('submit', function(e) {
-                console.log('Login form submitted');
                 e.preventDefault();
                 
                 const username = document.getElementById('username').value;
@@ -491,8 +470,6 @@
                 const errorMessage = document.getElementById('errorMessage');
                 const successMessage = document.getElementById('successMessage');
                 const loginButton = document.querySelector('#loginForm .login-button');
-                
-                console.log('Login attempt with username:', username);
                 
                 // Disable button during login attempt
                 loginButton.disabled = true;
@@ -505,7 +482,6 @@
                 
                 ipcRenderer.invoke('login', { username, password })
                     .then(response => {
-                        console.log('Login response:', response);
                         if (response.success) {
                             successMessage.textContent = response.message || 'Login successful';
                             successMessage.style.display = 'block';
@@ -526,7 +502,6 @@
                         }
                     })
                     .catch(error => {
-                        console.error('Login error:', error);
                         errorMessage.textContent = 'An error occurred. Please try again.';
                         errorMessage.style.display = 'block';
                         successMessage.style.display = 'none';
@@ -538,10 +513,8 @@
 
             // Password change form handling
             const changePasswordForm = document.getElementById('changePasswordForm');
-            console.log('Change password form:', changePasswordForm);
             
             changePasswordForm.addEventListener('submit', function(e) {
-                console.log('Change password form submitted');
                 e.preventDefault();
                 
                 const currentPassword = document.getElementById('currentPassword').value;
@@ -572,7 +545,6 @@
                     newPassword 
                 })
                 .then(response => {
-                    console.log('Change password response:', response);
                     if (response.success) {
                         successMessage.textContent = response.message || 'Password changed successfully';
                         successMessage.style.display = 'block';
@@ -595,7 +567,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error('Password change error:', error);
                     errorMessage.textContent = 'An error occurred. Please try again.';
                     errorMessage.style.display = 'block';
                 })
@@ -608,7 +579,6 @@
 
             // Toggle between login and change password forms
             document.getElementById('changePasswordLink').addEventListener('click', () => {
-                console.log('Switching to change password form');
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('changePasswordForm').style.display = 'block';
                 // Clear any previous error messages
@@ -618,7 +588,6 @@
             });
 
             document.getElementById('backToLogin').addEventListener('click', () => {
-                console.log('Switching back to login form');
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('changePasswordForm').style.display = 'none';
                 // Clear any previous error messages

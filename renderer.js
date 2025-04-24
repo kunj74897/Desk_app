@@ -10,10 +10,9 @@ const findCoordinates = async (pdfPath) => {
     const page = pdfDoc.getPages()[0];
     const { width, height } = page.getSize();
 
-    console.log("PDF dimensions:", { width, height });
     return { width, height };
   } catch (error) {
-    console.error("Error reading PDF:", error);
+    return null;
   }
 };
 const AadharForm = () => {
@@ -107,6 +106,13 @@ const AadharForm = () => {
     setShowAlert(true);
   };
 
+  // Format age to always be 3 digits with leading zeros
+  const formatAge = (age) => {
+    if (!age) return "000";
+    const ageNum = parseInt(age, 10);
+    return ageNum.toString().padStart(3, '0');
+  };
+
   const calculateAge = (birthDate) => {
     const today = new Date();
     const birth = new Date(birthDate);
@@ -120,7 +126,7 @@ const AadharForm = () => {
       age--;
     }
 
-    setFormData((prev) => ({ ...prev, age: age.toString() }));
+    setFormData((prev) => ({ ...prev, age: formatAge(age.toString()) }));
   };
 
   const formatAadharNumber = (value) => {
@@ -151,6 +157,30 @@ const AadharForm = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // Get max characters allowed for the field
+    const maxChars = {
+      name: 30,
+      aadharNo: 12,
+      mobileNo: 10,
+      verificationName: 30,
+      hofName: 30,
+      hofAadhar: 12,
+      email: 35,
+      careOf: 30,
+      houseNo: 20,
+      street: 30,
+      landmark: 30,
+      area: 30,
+      village: 20,
+      postOffice: 20,
+      pincode: 6,
+      subDistrict: 30,
+      district: 30,
+      state: 30,
+      poi: 50,
+      poa: 50
+    };
 
     if (name === "aadharNo" || name === "hofAadhar") {
       // Format Aadhar numbers with spaces
@@ -173,6 +203,10 @@ const AadharForm = () => {
       } else {
         setFormData((prev) => ({ ...prev, [name]: value }));
       }
+    } else if (maxChars[name] && typeof value === 'string') {
+      // Enforce max character limit on text fields
+      const limitedValue = value.slice(0, maxChars[name]);
+      setFormData((prev) => ({ ...prev, [name]: limitedValue }));
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -225,9 +259,20 @@ const AadharForm = () => {
 
     // Parse the date from yyyy-mm-dd format
     const [year, month, day] = dateString.split("-");
-
     // Return in ddmmyyyy format without hyphens
     return day + month + year;
+  };
+
+  // Get current date and time formatted for PDF
+  const getCurrentDateTime = () => {
+    const now = new Date();
+    const day = now.getDate().toString().padStart(2, '0');
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const year = now.getFullYear();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const fillPDF = async (formData, previewOnly = false) => {
@@ -251,25 +296,25 @@ const AadharForm = () => {
 
       const coordinates = {
         update: { x: 258, y: 720, symbol: "✓", font: zapfDingbatsFont },
-        mobile: { x: 206, y: 277, symbol: "✓", font: zapfDingbatsFont },
+        mobile: { x: 206, y: 274, symbol: "✓", font: zapfDingbatsFont },
         name: { x: 110, y: 678, maxChars: 30, spacing: 0.2 },
-        aadharNo: { x: 219, y: 300, maxChars: 12, spacing: 0 },
-        mobileNo: { x: 468, y: 612, maxChars: 10, spacing: 2.3 },
+        aadharNo: { x: 219, y: 301, maxChars: 12, spacing: 0 },
+        mobileNo: { x: 470, y: 612, maxChars: 10, spacing: 2.3 },
         hofName: { x: 195, y: 437, maxChars: 30, spacing: 0.2 },
-        hofAadhar: { x: 422, y: 436, maxChars: 12, spacing: 0 },
+        hofAadhar: { x: 424, y: 436, maxChars: 12, spacing: 0 },
         hofRelation: {
           options: {
             mother: { x: 205, y: 423, symbol: "✓", font: zapfDingbatsFont },
             father: { x: 259, y: 423, symbol: "✓", font: zapfDingbatsFont },
             "legal guardian": {
               x: 318,
-              y: 423,
+              y: 424,
               symbol: "✓",
               font: zapfDingbatsFont,
             },
-            spouse: { x: 263, y: 410, symbol: "✓", font: zapfDingbatsFont },
+            spouse: { x: 260, y: 409, symbol: "✓", font: zapfDingbatsFont },
             "child/ward": {
-              x: 318,
+              x: 316,
               y: 410,
               symbol: "✓",
               font: zapfDingbatsFont,
@@ -278,21 +323,21 @@ const AadharForm = () => {
           },
         },
         // Checkbox coordinates for HOF and Address (single coordinates)
-        checkboxHOF: { x: 144, y: 278, symbol: "✓", font: zapfDingbatsFont },
-        checkboxAddress: { x: 144, y: 278, symbol: "✓", font: zapfDingbatsFont },
+        checkboxHOF: { x: 144, y: 275, symbol: "✓", font: zapfDingbatsFont },
+        checkboxAddress: { x: 144, y: 275, symbol: "✓", font: zapfDingbatsFont },
         
         // Checkbox coordinates for other options
-        checkboxGender: { x: 87, y: 279, symbol: "✓", font: zapfDingbatsFont },
-        checkboxEmail: { x: 272, y: 279, symbol: "✓", font: zapfDingbatsFont },
-        checkboxBirthdate: { x: 453, y: 291, symbol: "✓", font: zapfDingbatsFont },
+        checkboxGender: { x: 87, y: 275, symbol: "✓", font: zapfDingbatsFont },
+        checkboxEmail: { x: 272, y: 275, symbol: "✓", font: zapfDingbatsFont },
+        checkboxBirthdate: { x: 453, y: 287, symbol: "✓", font: zapfDingbatsFont },
         
         gender: {
           options: {
-            male: { x: 68, y: 640, symbol: "✓", font: zapfDingbatsFont },
+            male: { x: 70, y: 640, symbol: "✓", font: zapfDingbatsFont },
             female: { x: 120, y: 652, symbol: "✓", font: zapfDingbatsFont },
             "third gender/transgender": {
-              x: 68,
-              y: 630,
+              x: 70,
+              y: 625,
               symbol: "✓",
               font: zapfDingbatsFont,
             },
@@ -300,36 +345,37 @@ const AadharForm = () => {
         },
         email: { x: 114, y: 613, maxChars: 35 },
         birthdate: { x: 279, y: 653, maxChars: 10, spacing: 2.3 },
+        verified:{x: 206, y: 640, symbol: "✓", font: zapfDingbatsFont},
         age: { x: 473, y: 653, maxChars: 3 },
         pdb: {
           x: 414,
-          y: 467,
-          maxChars: 30,
+          y: 465,
+          maxChars: 40,
         },
-        careOf: { x: 201, y: 560, maxChars: 30 },
-        houseNo: { x: 195, y: 547, maxChars: 20 },
-        street: { x: 321, y: 547, maxChars: 30 },
-        landmark: { x: 115, y: 532, maxChars: 30 },
-        area: { x: 383, y: 532, maxChars: 30 },
-        village: { x: 147, y: 520, maxChars: 30 },
-        postOffice: { x: 338, y: 520, maxChars: 30 },
-        pincode: { x: 507, y: 520, maxChars: 6, spacing: 10 },
-        subDistrict: { x: 119, y: 505, maxChars: 30 },
-        district: { x: 281, y: 505, maxChars: 30 },
-        state: { x: 440, y: 505, maxChars: 30 },
+        careOf: { x: 200, y: 562, maxChars: 30 },
+        houseNo: { x: 190, y: 548, maxChars: 20 },
+        street: { x: 321, y: 548, maxChars: 30 },
+        landmark: { x: 112, y: 535, maxChars: 30 },
+        area: { x: 380, y: 535, maxChars: 30 },
+        village: { x: 145, y: 520, maxChars: 20 },
+        postOffice: { x: 336, y: 520, maxChars: 20 },
+        pincode: { x: 507, y: 519, maxChars: 6, spacing: 10 },
+        subDistrict: { x: 117, y: 508, maxChars: 30 },
+        district: { x: 277, y: 508, maxChars: 30 },
+        state: { x: 438, y: 508, maxChars: 30 },
         residentialType: {
           x: 150,
           y: 600,
           options: {
             "indian residential": {
               x: 143,
-              y: 704,
+              y: 705,
               symbol: "✓",
               font: zapfDingbatsFont,
             },
             "non residential indian": {
               x: 258,
-              y: 704,
+              y: 705,
               symbol: "✓",
               font: zapfDingbatsFont,
             },
@@ -337,14 +383,20 @@ const AadharForm = () => {
         },
         poi: {
           x: 349,
-          y: 496,
-          maxChars: 30,
+          y: 492,
+          maxChars: 50,
         },
         poa: {
           x: 356,
-          y: 481,
-          maxChars: 30,
+          y: 478,
+          maxChars: 50,
         },
+        verifier:{
+          x: 121, y: 70, maxchars:30
+        },
+        dateandtime:{
+          x: 354, y: 70, maxchars:30
+        }
       };
 
       const drawTextInBoxes = (text, config, key = "") => {
@@ -380,7 +432,7 @@ const AadharForm = () => {
             key === "hofAadhar" ||
             key === "mobileNo" ||
             key === "pincode" ||
-            key === "birthdate";
+            key === "age";
 
           if (isNumericField) {
             // Character-by-character placement for numbers
@@ -397,10 +449,6 @@ const AadharForm = () => {
                 xPos += 12;
               if ((key === "aadharNo" || key === "hofAadhar") && i >= 8)
                 xPos += 12;
-
-              // Add extra gap for birthdate (DD-MM-YYYY format)
-              if (key === "birthdate" && i === 2) xPos += 5;
-              if (key === "birthdate" && i === 4) xPos += 5;
 
               page.drawText(digits[i], {
                 x: xPos,
@@ -429,6 +477,14 @@ const AadharForm = () => {
       // Draw the update checkbox first
       drawTextInBoxes("✓", coordinates.update);
       
+      // Draw the mobile checkbox
+      drawTextInBoxes("✓", coordinates.mobile);
+      
+      // Draw verified checkbox if birthdate is selected
+      if (selectedFields.birthdate) {
+        drawTextInBoxes("✓", coordinates.verified);
+      }
+      
       // Draw checkbox ticks for selected fields
       if (selectedFields.hof) {
         drawTextInBoxes("✓", coordinates.checkboxHOF);
@@ -450,6 +506,14 @@ const AadharForm = () => {
         drawTextInBoxes("✓", coordinates.checkboxBirthdate);
       }
 
+      // Add verifier name (from verification name field)
+      if (formData.verificationName) {
+        drawTextInBoxes(formData.verificationName, coordinates.verifier);
+      }
+      
+      // Add current date and time
+      drawTextInBoxes(getCurrentDateTime(), coordinates.dateandtime);
+
       // Handle the rest of the form data
       Object.entries(formData).forEach(([key, value]) => {
         if (value && coordinates[key]) {
@@ -458,7 +522,28 @@ const AadharForm = () => {
           // Format birthdate specially
           if (key === "birthdate" && value) {
             const formattedDate = formatDateForPDF(value);
-            drawTextInBoxes(formattedDate, config, key);
+            // Use character-by-character placement for birthdate
+            const digitsArray = formattedDate.split('');
+            let xPos = config.x;
+            const charSpacing = 10.2;
+            
+            for (let i = 0; i < digitsArray.length && i < 8; i++) {
+              let currentX = xPos + (i * charSpacing);
+              
+              page.drawText(digitsArray[i], {
+                x: currentX,
+                y: config.y,
+                size: 10,
+                font: timesRomanFont,
+                color: rgb(0, 0, 0),
+              });
+            }
+          }
+          // Handle age with 3 digits
+          else if (key === "age" && value) {
+            // Format age to always be 3 digits
+            const formattedAge = formatAge(value);
+            drawTextInBoxes(formattedAge, config, key);
           }
           // Handle Aadhar numbers
           else if ((key === "aadharNo" || key === "hofAadhar") && value) {
@@ -467,7 +552,7 @@ const AadharForm = () => {
               drawTextInBoxes(cleanValue, config, key);
             }
           }
-          // Handle mobile with country code
+          // Handle mobile number
           else if (key === "mobileNo" && value) {
             // Mobile number processing without country code for the form
             drawTextInBoxes(value, config, key);
@@ -505,8 +590,6 @@ const AadharForm = () => {
       setIsGenerating(false);
     } catch (error) {
       setIsGenerating(false);
-      console.error("PDF Generation Error:", error);
-      console.error("Error Stack:", error.stack);
       showCustomAlert("Error generating PDF: " + error.message);
     }
   };
@@ -802,7 +885,20 @@ const AadharForm = () => {
           value: formData.name,
           onChange: handleInputChange,
           required: true,
-        })
+          maxLength: 30,
+        }),
+        formData.name.length >= 30 && 
+          React.createElement(
+            "div", 
+            { 
+              style: { 
+                color: "#d93025", 
+                fontSize: "12px", 
+                marginTop: "5px" 
+              } 
+            },
+            "Maximum 30 characters allowed"
+          )
       ),
       React.createElement(
         "div",
@@ -838,10 +934,11 @@ const AadharForm = () => {
           onChange: handleInputChange,
           placeholder: "10-digit mobile number",
           required: true,
+          maxLength: 10,
         }),
         formData.mobileNo && !validateMobileNumber(formData.mobileNo) && 
-      React.createElement(
-        "div",
+          React.createElement(
+            "div", 
             { 
               style: { 
                 color: "#d93025", 
@@ -850,7 +947,7 @@ const AadharForm = () => {
               } 
             },
             "Please enter a valid Indian mobile number (10 digits starting with 6, 7, 8, or 9)"
-        )
+          )
       ),
       React.createElement(
         "div",
@@ -870,6 +967,7 @@ const AadharForm = () => {
             onChange: handleInputChange,
             required: true,
             readOnly: formData.isVerificationNameLocked,
+            maxLength: 30,
           }),
           React.createElement(
             "label",
@@ -886,7 +984,19 @@ const AadharForm = () => {
             }),
             "Lock verification name"
           )
-        )
+        ),
+        formData.verificationName.length >= 30 && 
+          React.createElement(
+            "div", 
+            { 
+              style: { 
+                color: "#d93025", 
+                fontSize: "12px", 
+                marginTop: "5px" 
+              } 
+            },
+            "Maximum 30 characters allowed"
+          )
       )
     ),
 
@@ -1076,7 +1186,7 @@ const AadharForm = () => {
                 "Select Proof of Date of Birth"
               ),
               React.createElement('option', { value: 'Valid Indian Passport' }, 'Valid Indian Passport'),
-React.createElement('option', { value: 'Service Photo Identity Card issued by Central GovernmentGovernment' }, 'Service Photo Identity Card issued by Central GovernmentGovernment'),
+React.createElement('option', { value: 'Service Photo Identity Card issued by Central Government' }, 'Service Photo Identity Card issued by Central Government'),
 React.createElement('option', { value: 'PSU' }, 'PSU'),
 React.createElement('option', { value: 'regulatory body' }, 'regulatory body'),
 React.createElement('option', { value: 'statutory body' }, 'statutory body'),
@@ -1359,10 +1469,10 @@ React.createElement('option', { value: 'MP' }, 'MP'),
 React.createElement('option', { value: 'MLA' }, 'MLA'),
 React.createElement('option', { value: 'MLC' }, 'MLC'),
 React.createElement('option', { value: 'Municipal Councillor' }, 'Municipal Councillor'),
-React.createElement('option', { value: 'Gazetted officer Group ‘A’' }, 'Gazetted officer Group ‘A’'),
+React.createElement('option', { value: "Gazetted officer Group 'A'" }, "Gazetted officer Group 'A'"),
 React.createElement('option', { value: '(EPFO) Officer' }, '(EPFO) Officer'),
 React.createElement('option', { value: 'Tehsildar' }, 'Tehsildar'),
-React.createElement('option', { value: 'Gazetted Officer Group ‘B’' }, 'Gazetted Officer Group ‘B’'),
+React.createElement('option', { value: "Gazetted Officer Group 'B'" }, "Gazetted Officer Group 'B'"),
 React.createElement('option', { value: 'Gazetted Officer at (NACO)' }, 'Gazetted Officer at (NACO)'),
 React.createElement('option', { value: 'State Health Department' }, 'State Health Department'),
 React.createElement('option', { value: 'Project Director of the State AIDS Control Society' }, 'Project Director of the State AIDS Control Society'),
