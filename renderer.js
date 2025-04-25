@@ -329,7 +329,7 @@ const AadharForm = () => {
         // Checkbox coordinates for other options
         checkboxGender: { x: 87, y: 275, symbol: "✓", font: zapfDingbatsFont },
         checkboxEmail: { x: 272, y: 275, symbol: "✓", font: zapfDingbatsFont },
-        checkboxBirthdate: { x: 453, y: 287, symbol: "✓", font: zapfDingbatsFont },
+        checkboxBirthdate: { x: 453, y: 288, symbol: "✓", font: zapfDingbatsFont },
         
         gender: {
           options: {
@@ -346,7 +346,7 @@ const AadharForm = () => {
         email: { x: 114, y: 613, maxChars: 35 },
         birthdate: { x: 279, y: 653, maxChars: 10, spacing: 2.3 },
         verified:{x: 206, y: 640, symbol: "✓", font: zapfDingbatsFont},
-        age: { x: 473, y: 653, maxChars: 3 },
+        age: { x: 471, y: 653, maxChars: 3 },
         pdb: {
           x: 414,
           y: 465,
