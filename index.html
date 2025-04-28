@@ -416,6 +416,7 @@
                 <div class="success-message" id="successMessage"></div>
                 <button type="submit" class="login-button">Login</button>
                 <div class="change-password-link" id="changePasswordLink">Change Password</div>
+                <div class="change-password-link" id="changeUsernameLink">Change Username</div>
             </form>
 
             <form id="changePasswordForm" class="change-password-form">
@@ -435,6 +436,21 @@
                 <div class="success-message" id="changePasswordSuccess"></div>
                 <button type="submit" class="login-button">Change Password</button>
                 <div class="change-password-link" id="backToLogin">Back to Login</div>
+            </form>
+            
+            <form id="changeUsernameForm" class="change-password-form">
+                <div class="form-group">
+                    <label for="passwordForUsername">Current Password</label>
+                    <input type="password" id="passwordForUsername" name="passwordForUsername" required>
+                </div>
+                <div class="form-group">
+                    <label for="newUsername">New Username</label>
+                    <input type="text" id="newUsername" name="newUsername" required>
+                </div>
+                <div class="error-message" id="changeUsernameError"></div>
+                <div class="success-message" id="changeUsernameSuccess"></div>
+                <button type="submit" class="login-button">Change Username</button>
+                <div class="change-password-link" id="backToLoginFromUsername">Back to Login</div>
             </form>
         </div>
     </div>
@@ -593,6 +609,80 @@
                 // Clear any previous error messages
                 document.getElementById('errorMessage').style.display = 'none';
             });
+
+            // Username change form handling
+            const changeUsernameForm = document.getElementById('changeUsernameForm');
+            
+            changeUsernameForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const passwordForUsername = document.getElementById('passwordForUsername').value;
+                const newUsername = document.getElementById('newUsername').value;
+                const errorMessage = document.getElementById('changeUsernameError');
+                const successMessage = document.getElementById('changeUsernameSuccess');
+                const changeUsernameButton = document.querySelector('#changeUsernameForm .login-button');
+                
+                // Reset message displays
+                errorMessage.style.display = 'none';
+                successMessage.style.display = 'none';
+                
+                // Disable button during username change attempt
+                changeUsernameButton.disabled = true;
+                changeUsernameButton.textContent = 'Changing Username...';
+
+                ipcRenderer.invoke('change-username', { 
+                    currentPassword: passwordForUsername, 
+                    newUsername 
+                })
+                .then(response => {
+                    if (response.success) {
+                        successMessage.textContent = response.message || 'Username changed successfully';
+                        successMessage.style.display = 'block';
+                        errorMessage.style.display = 'none';
+                        
+                        // Clear the form fields
+                        document.getElementById('passwordForUsername').value = '';
+                        document.getElementById('newUsername').value = '';
+                        
+                        setTimeout(() => {
+                            document.getElementById('loginForm').style.display = 'block';
+                            document.getElementById('changeUsernameForm').style.display = 'none';
+                            successMessage.style.display = 'none';
+                        }, 2000);
+                    } else {
+                        errorMessage.textContent = response.message || 'Failed to change username';
+                        errorMessage.style.display = 'block';
+                        successMessage.style.display = 'none';
+                    }
+                })
+                .catch(error => {
+                    errorMessage.textContent = 'An error occurred. Please try again.';
+                    errorMessage.style.display = 'block';
+                })
+                .finally(() => {
+                    // Re-enable the button
+                    changeUsernameButton.disabled = false;
+                    changeUsernameButton.textContent = 'Change Username';
+                });
+            });
+
+            // Toggle between login and change username forms
+            document.getElementById('changeUsernameLink').addEventListener('click', () => {
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('changeUsernameForm').style.display = 'block';
+                // Clear any previous error messages
+                document.getElementById('errorMessage').style.display = 'none';
+                document.getElementById('changeUsernameError').style.display = 'none';
+                document.getElementById('changeUsernameSuccess').style.display = 'none';
+            });
+
+            document.getElementById('backToLoginFromUsername').addEventListener('click', () => {
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('changeUsernameForm').style.display = 'none';
+                // Clear any previous error messages
+                document.getElementById('errorMessage').style.display = 'none';
+            });
+
         }
     </script>
 </body>

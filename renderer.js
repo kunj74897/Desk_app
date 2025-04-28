@@ -42,7 +42,7 @@ const AadharForm = () => {
     state: "",
     poi: "",
     poa: "",
-    residentialType: "",
+    residentialType: "indian residential",
     isVerificationNameLocked: false,
   });
 
@@ -360,9 +360,9 @@ const AadharForm = () => {
         village: { x: 145, y: 520, maxChars: 20 },
         postOffice: { x: 336, y: 520, maxChars: 20 },
         pincode: { x: 507, y: 519, maxChars: 6, spacing: 10 },
-        subDistrict: { x: 117, y: 508, maxChars: 30 },
-        district: { x: 277, y: 508, maxChars: 30 },
-        state: { x: 438, y: 508, maxChars: 30 },
+        subDistrict: { x: 117, y: 506, maxChars: 30 },
+        district: { x: 277, y: 506, maxChars: 30 },
+        state: { x: 438, y: 506, maxChars: 30 },
         residentialType: {
           x: 150,
           y: 600,
@@ -819,7 +819,7 @@ const AadharForm = () => {
       state: "",
       poi: "",
       poa: "",
-      residentialType: "",
+      residentialType: "indian residential",
       isVerificationNameLocked: false,
       ...preserveVerificationName
     });
@@ -937,8 +937,8 @@ const AadharForm = () => {
           maxLength: 10,
         }),
         formData.mobileNo && !validateMobileNumber(formData.mobileNo) && 
-          React.createElement(
-            "div", 
+      React.createElement(
+        "div",
             { 
               style: { 
                 color: "#d93025", 
@@ -947,7 +947,7 @@ const AadharForm = () => {
               } 
             },
             "Please enter a valid Indian mobile number (10 digits starting with 6, 7, 8, or 9)"
-          )
+        )
       ),
       React.createElement(
         "div",
@@ -996,7 +996,7 @@ const AadharForm = () => {
               } 
             },
             "Maximum 30 characters allowed"
-          )
+        )
       )
     ),
 
@@ -1231,7 +1231,7 @@ React.createElement('option', { value: 'Self Declaration as per notified format 
           { className: "form-group" },
           React.createElement(
             "label",
-            { className: "required" },
+            { className: "" },
             "House No./Building/Apartment"
           ),
           React.createElement("input", {
@@ -1247,7 +1247,7 @@ React.createElement('option', { value: 'Self Declaration as per notified format 
           { className: "form-group" },
           React.createElement(
             "label",
-            { className: "required" },
+            { className: "" },
             "Street/Road/Lane"
           ),
           React.createElement("input", {
@@ -1275,7 +1275,7 @@ React.createElement('option', { value: 'Self Declaration as per notified format 
           { className: "form-group" },
           React.createElement(
             "label",
-            { className: "required" },
+            { className: "" },
             "Area/Locality/Sector"
           ),
           React.createElement("input", {
@@ -1509,7 +1509,7 @@ React.createElement('option', { value: 'Marriage Certificate' }, 'Marriage Certi
       ),
 
     // Add control buttons at the bottom
-    React.createElement(
+            React.createElement(
       "div",
       { 
         className: "form-buttons",
@@ -1520,7 +1520,7 @@ React.createElement('option', { value: 'Marriage Certificate' }, 'Marriage Certi
           marginTop: "2rem",
         }
       },
-      React.createElement(
+            React.createElement(
         "button",
         {
           type: "button",
@@ -1545,7 +1545,7 @@ React.createElement('option', { value: 'Marriage Certificate' }, 'Marriage Certi
             }
           },
         },
-        isGenerating ? "Generating..." : "Preview PDF"
+        isGenerating ? "Generating..." : "Print PDF"
       ),
     React.createElement(
       "button",

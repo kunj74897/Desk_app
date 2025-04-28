@@ -127,3 +127,25 @@ ipcMain.handle('change-password', async (event, { currentPassword, newPassword }
         return { success: false, message: 'Failed to change password. Please try again.' };
     }
 })
+
+// Handle username change
+ipcMain.handle('change-username', async (event, { currentPassword, newUsername }) => {
+    try {
+        const storedCredentials = store.get('credentials');
+        
+        const isPasswordMatch = passwordManager.verifyPassword(currentPassword, storedCredentials.password);
+        
+        if (!isPasswordMatch) {
+            return { success: false, message: 'Password is incorrect' };
+        }
+        
+        store.set('credentials', {
+            ...storedCredentials,
+            username: newUsername
+        });
+        
+        return { success: true, message: 'Username changed successfully' };
+    } catch (error) {
+        return { success: false, message: 'Failed to change username. Please try again.' };
+    }
+})
