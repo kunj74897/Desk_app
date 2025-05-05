@@ -159,28 +159,7 @@ const AadharForm = () => {
     const { name, value, type, checked } = e.target;
     
     // Get max characters allowed for the field
-    const maxChars = {
-      name: 30,
-      aadharNo: 12,
-      mobileNo: 10,
-      verificationName: 30,
-      hofName: 30,
-      hofAadhar: 12,
-      email: 35,
-      careOf: 30,
-      houseNo: 20,
-      street: 30,
-      landmark: 30,
-      area: 30,
-      village: 20,
-      postOffice: 20,
-      pincode: 6,
-      subDistrict: 30,
-      district: 30,
-      state: 30,
-      poi: 50,
-      poa: 50
-    };
+    
 
     if (name === "aadharNo" || name === "hofAadhar") {
       // Format Aadhar numbers with spaces
@@ -190,6 +169,12 @@ const AadharForm = () => {
       // Only allow digits for mobile number
       const digits = value.replace(/\D/g, "");
       if (digits.length <= 10) {
+        setFormData((prev) => ({ ...prev, [name]: digits }));
+      }
+    } else if (name === "pincode") {
+      // Only allow digits and limit to 6 characters
+      const digits = value.replace(/\D/g, "");
+      if (digits.length <= 6) {
         setFormData((prev) => ({ ...prev, [name]: digits }));
       }
     } else if (name === "birthdate") {
@@ -203,10 +188,7 @@ const AadharForm = () => {
       } else {
         setFormData((prev) => ({ ...prev, [name]: value }));
       }
-    } else if (maxChars[name] && typeof value === 'string') {
-      // Enforce max character limit on text fields
-      const limitedValue = value.slice(0, maxChars[name]);
-      setFormData((prev) => ({ ...prev, [name]: limitedValue }));
+    
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
@@ -297,7 +279,7 @@ const AadharForm = () => {
       const coordinates = {
         update: { x: 258, y: 720, symbol: "✓", font: zapfDingbatsFont },
         mobile: { x: 206, y: 274, symbol: "✓", font: zapfDingbatsFont },
-        name: { x: 110, y: 678, maxChars: 30, spacing: 0.2 },
+        name: { x: 110, y: 678, maxChars: 100, spacing: 0.2 },
         aadharNo: { x: 219, y: 301, maxChars: 12, spacing: 0 },
         mobileNo: { x: 470, y: 612, maxChars: 10, spacing: 2.3 },
         hofName: { x: 195, y: 437, maxChars: 30, spacing: 0.2 },
@@ -392,7 +374,7 @@ const AadharForm = () => {
           maxChars: 50,
         },
         verifier:{
-          x: 121, y: 70, maxchars:30
+          x: 121, y: 70, maxchars:40
         },
         dateandtime:{
           x: 354, y: 70, maxchars:30
@@ -750,9 +732,7 @@ const AadharForm = () => {
 
     if (selectedFields.address) {
       const addressFields = {
-        houseNo: "House No./Building/Apartment",
-        street: "Street/Road/Lane",
-        area: "Area/Locality/Sector",
+        postoffice:"postOffice",
         pincode: "Pincode",
       };
 
@@ -885,9 +865,9 @@ const AadharForm = () => {
           value: formData.name,
           onChange: handleInputChange,
           required: true,
-          maxLength: 30,
+          maxLength: 100,
         }),
-        formData.name.length >= 30 && 
+        formData.name.length >= 100 && 
           React.createElement(
             "div", 
             { 
@@ -897,7 +877,7 @@ const AadharForm = () => {
                 marginTop: "5px" 
               } 
             },
-            "Maximum 30 characters allowed"
+            "Maximum 100 characters allowed"
           )
       ),
       React.createElement(
@@ -967,7 +947,7 @@ const AadharForm = () => {
             onChange: handleInputChange,
             required: true,
             readOnly: formData.isVerificationNameLocked,
-            maxLength: 30,
+            maxLength: 40,
           }),
           React.createElement(
             "label",
@@ -985,7 +965,7 @@ const AadharForm = () => {
             "Lock verification name"
           )
         ),
-        formData.verificationName.length >= 30 && 
+        formData.verificationName.length >= 40 && 
           React.createElement(
             "div", 
             { 
@@ -995,7 +975,7 @@ const AadharForm = () => {
                 marginTop: "5px" 
               } 
             },
-            "Maximum 30 characters allowed"
+            "Maximum 40 characters allowed"
         )
       )
     ),
@@ -1301,7 +1281,7 @@ React.createElement('option', { value: 'Self Declaration as per notified format 
         React.createElement(
           "div",
           { className: "form-group" },
-          React.createElement("label", null, "Post Office"),
+          React.createElement("label", { className: "required" }, "Post Office"),
           React.createElement("input", {
             type: "text",
             name: "postOffice",
@@ -1322,7 +1302,15 @@ React.createElement('option', { value: 'Self Declaration as per notified format 
             onChange: handleInputChange,
             disabled: !selectedFields.address,
             required: true,
-          })
+            placeholder: "Enter 6-digit pincode",
+            maxLength: 6,
+          }),
+          formData.pincode && formData.pincode.length !== 6 && 
+            React.createElement(
+              "div",
+              { style: { color: "#d93025", fontSize: "12px", marginTop: "5px" } },
+              "Please enter a valid 6-digit pincode"
+            )
         ),
         React.createElement(
           "div",
@@ -1448,6 +1436,11 @@ React.createElement('option', { value: 'Adoption Certificate' }, 'Adoption Certi
               "Select Proof of Address"
             ),
             React.createElement('option', { value: 'Valid Indian Passport' }, 'Valid Indian Passport'),
+            React.createElement(
+              'option',
+              { value: 'Self-declaration from the Head of Family (HoF) certifying the relationship ' },
+              'Self-declaration from the Head of Family (HoF) certifying the relationship '
+            ),
 React.createElement('option', { value: 'Ration Card' }, 'Ration Card'),
 React.createElement('option', { value: 'Voter Identity Card' }, 'Voter Identity Card'),
 React.createElement('option', { value: 'Disability Identity Card' }, 'Disability Identity Card'),

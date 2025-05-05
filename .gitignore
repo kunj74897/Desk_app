@@ -14,7 +14,7 @@ node_modules/
 *.tmp
 .DS_Store
 Thumbs.db
-
+.env
 # Ignore build artifacts
 *.dSYM
 *.so
