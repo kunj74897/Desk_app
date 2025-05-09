@@ -35,7 +35,7 @@ const AadharForm = () => {
     landmark: "",
     area: "",
     village: "",
-    postOffice: "",
+    postoffice: "",
     pincode: "",
     subDistrict: "",
     district: "",
@@ -340,7 +340,7 @@ const AadharForm = () => {
         landmark: { x: 112, y: 535, maxChars: 30 },
         area: { x: 380, y: 535, maxChars: 30 },
         village: { x: 145, y: 520, maxChars: 20 },
-        postOffice: { x: 336, y: 520, maxChars: 20 },
+        postoffice: { x: 336, y: 520, maxChars: 20 },
         pincode: { x: 507, y: 519, maxChars: 6, spacing: 10 },
         subDistrict: { x: 117, y: 506, maxChars: 30 },
         district: { x: 277, y: 506, maxChars: 30 },
@@ -732,7 +732,7 @@ const AadharForm = () => {
 
     if (selectedFields.address) {
       const addressFields = {
-        postoffice:"postOffice",
+        postoffice:"Post Office",
         pincode: "Pincode",
       };
 
@@ -792,7 +792,7 @@ const AadharForm = () => {
       landmark: "",
       area: "",
       village: "",
-      postOffice: "",
+      postoffice: "",
       pincode: "",
       subDistrict: "",
       district: "",
@@ -1284,8 +1284,8 @@ React.createElement('option', { value: 'Self Declaration as per notified format 
           React.createElement("label", { className: "required" }, "Post Office"),
           React.createElement("input", {
             type: "text",
-            name: "postOffice",
-            value: formData.postOffice,
+            name: "postoffice",
+            value: formData.postoffice,
             onChange: handleInputChange,
             disabled: !selectedFields.address,
             required: true,
