@@ -4,10 +4,25 @@ const path = require('path')
 const Store = require('electron-store')
 const verifyLicense = require('./verify-license')
 const crypto = require('crypto')
+const LicenseManager = require('./license-manager');
 
 const store = new Store({
     encryptionKey: 'your-secure-encryption-key'
 })
+
+function setupLifetimeLicenseIfMissing() {
+    const licenseManager = new LicenseManager();
+    const license = licenseManager.loadLicense();
+
+    if (!license) {
+        console.log('No license found. Generating a lifetime license...');
+        const hardwareId = licenseManager.getHardwareId();
+        const lifetimeDate = '9999-12-31';
+        const newLicense = licenseManager.generateLicense(hardwareId, lifetimeDate);
+        licenseManager.saveLicense(newLicense);
+        console.log('Lifetime license generated and saved successfully.');
+    }
+}
 
 // Secure password management
 class PasswordManager {
@@ -55,6 +70,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
     // Verify license before creating window
+    setupLifetimeLicenseIfMissing();
     if (!verifyLicense()) {
         app.quit()
         return
